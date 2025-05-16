@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Objednávka</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f5f5f5;
+      padding: 2rem;
+    }
+    form, #order-summary, #thank-you {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 1rem auto;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.7rem 1.5rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #thank-you {
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<form id="checkout-form">
+  <h2>Objednávka</h2>
+
+  <label>Meno a priezvisko:
+    <input type="text" name="name" required />
+  </label>
+
+  <label>Adresa:
+    <input type="text" name="address" required />
+  </label>
+
+  <label>Mesto:
+    <input type="text" name="city" required />
+  </label>
+
+  <label for="postal">PSČ</label>
+    <input
+      type="text"
+      id="postal"
+      name="postal"
+      required
+      autocomplete="postal-code"
+      pattern="^\d{3}\s?\d{2}$"
+      title="Zadajte platné PSČ vo formáte 81101 alebo 811 01"
+    />
+
+  <label for="phone">Telefónne číslo</label>
+    <input
+      type="tel"
+      id="phone"
+      name="phone"
+      required
+      autocomplete="tel"
+      pattern="^(09\d{8}|\+4219\d{8})$"
+      title="Zadajte platné telefónne číslo vo formáte 0911111111 alebo +421911111111"
+    />
+
+  <label>Email:
+    <input type="email" name="email" required />
+  </label>
+
+  <label>Spôsob dopravy:
+    <select name="delivery" required>
+      <option value="Kuriér (4.99)">Kuriér (4.99 €)</option>
+      <option value="Packeta (3.99)">Packeta (3.99 €)</option>
+      <option value="Osobný odber (0)">Osobný odber (zadarmo)</option>
+    </select>
+  </label>
+
+  <label>Spôsob platby:
+    <select name="payment" required>
+      <option value="Kartou (0)">Kartou (zadarmo)</option>
+      <option value="Prevodom (0)">Prevodom (zadarmo)</option>
+      <option value="Dobierka (1)">Dobierka (1 €)</option>
+    </select>
+  </label>
+
+  <label>
+    <input type="checkbox" id="terms" required />
+    Súhlasím s obchodnými podmienkami
+  </label>
+
+  <button type="submit">Odoslať záväzne objednávku</button>
+</form>
+
+<div id="order-summary"></div>
+
+<div id="thank-you">
+  <h2>Ďakujeme za objednanie.</h2>
+  <p id="order-number-text"></p>
+  <p>O chvíľu budete presmerovaný na hlavnú stránku.</p>
+</div>
+
+<script>
+  const form = document.getElementById("checkout-form");
+  const summary = document.getElementById("order-summary");
+  const thankYou = document.getElementById("thank-you");
+  const orderNumberText = document.getElementById("order-number-text");
+
+  function generateOrderNumber() {
+    return Math.floor(10000 + Math.random() * 90000);
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const data = new FormData(form);
+    const orderNum = generateOrderNumber();
+
+    const delivery = data.get("delivery");
+    const payment = data.get("payment");
+
+    const deliveryCost = parseFloat(delivery.match(/\(([^)]+)\)/)[1]);
+    const paymentCost = parseFloat(payment.match(/\(([^)]+)\)/)[1]);
+
+    const productsTotal = 29.97; // príkladová suma, môžeš nahradiť z localStorage
+    const finalTotal = (productsTotal + deliveryCost + paymentCost).toFixed(2);
+
+    summary.innerHTML = `
+      <h3>Zhrnutie objednávky č. ${orderNum}</h3>
+      <p><strong>Meno:</strong> ${data.get("name")}</p>
+      <p><strong>Adresa:</strong> ${data.get("address")}, ${data.get("postal")} ${data.get("city")}</p>
+      <p><strong>Telefón:</strong> ${data.get("phone")}</p>
+      <p><strong>Email:</strong> ${data.get("email")}</p>
+      <p><strong>Doprava:</strong> ${delivery}</p>
+      <p><strong>Platba:</strong> ${payment}</p>
+      <p><strong>Cena produktov:</strong> €${productsTotal.toFixed(2)}</p>
+      <p><strong>Cena dopravy:</strong> €${deliveryCost.toFixed(2)}</p>
+      <p><strong>Cena platby:</strong> €${paymentCost.toFixed(2)}</p>
+      <h3>Celková suma: €${finalTotal}</h3>
+    `;
+
+    form.style.display = "none";
+    summary.style.display = "none";
+    thankYou.style.display = "block";
+    orderNumberText.textContent = `Vaša objednávka č. ${orderNum} bola vytvorená.`;
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 15000);
+  });
+</script>
+
+</body>
+</html>
